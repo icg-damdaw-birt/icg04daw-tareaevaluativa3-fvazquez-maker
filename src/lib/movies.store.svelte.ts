@@ -83,6 +83,28 @@ export const moviesStore = {
     }
   },
 
+  async rateMovie(id: string, rating: number): Promise<boolean> {
+    mutating = true;
+    error = null;
+
+    if (rating < 1 || rating > 5) {
+      error = "La valoración debe estar entre 1 y 5";
+      return false;
+    }
+
+    try {
+      await api.rateMovie(id, rating);
+      // Actualizar la película con el nuevo rating
+      movies = movies.map(m => m.id === id ? { ...m, rating: (m.rating || 0) + 1 } : m);
+      return true;
+    } catch (err) {
+      error = err instanceof Error ? err.message : 'Error al valorar película';
+      return false;
+    } finally {
+      mutating = false;
+    }
+  },
+
   // Limpiar estado completo
   reset() {
     movies = [];

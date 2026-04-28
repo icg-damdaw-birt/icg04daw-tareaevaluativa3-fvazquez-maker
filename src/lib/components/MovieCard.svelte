@@ -6,12 +6,14 @@
     movie,
     showActions = true,
     ondelete,
-    onedit
+    onedit,
+    onRate
   }: {
     movie: Movie;
     showActions?: boolean;
     ondelete?: (id: string) => void;
     onedit?: (movie: Movie) => void;
+    onRate?: (id: string, rating: number) => void;
   } = $props();
 
   // Handlers: ejecutan callbacks del padre directamente
@@ -42,12 +44,24 @@
       <h3 class="text-lg font-semibold text-slate-900">{movie.title}</h3>
       <p class="text-sm text-slate-600">Dirigida por {movie.director}</p>
     </header>
-
+    
     <div class="mt-auto text-sm text-slate-500">
       {#if movie.year}
         <span>Año: {movie.year}</span>
       {/if}
     </div>
+
+<div class="rating-container mt-3 flex justify-center gap-1">
+  {#each [1, 2, 3, 4, 5] as star}
+    <button 
+      type="button"
+      class="text-2xl transition-transform hover:scale-125 {movie.rating >= star ? 'text-yellow-400' : 'text-slate-300'}"
+      onclick={() => onRate?.(movie.id, star)}
+    >
+      ★
+    </button>
+  {/each}
+</div>
 
     {#if showActions}
       <div class="mt-3 flex flex-col gap-2 sm:flex-row">

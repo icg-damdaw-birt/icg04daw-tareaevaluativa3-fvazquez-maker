@@ -75,6 +75,18 @@
     }
   }
 
+  async function handleRate(id: string, rating: number) {
+    feedbackMessage = null;
+    moviesStore.clearError();
+
+    // Llamamos al método del store (el que tiene la lógica de validación 1-5)
+    const ok = await moviesStore.rateMovie(id, rating);
+
+    if (ok) {
+      feedbackMessage = { type: 'info', text: '¡Valoración guardada correctamente!' };
+    }
+  }
+
   // Abre el modo edición con los datos de la tarjeta seleccionada.
   function handleEdit(movie: Movie) {
     editingMovie = movie;
@@ -119,7 +131,7 @@
       {:else}
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           {#each moviesStore.movies as movie (movie.id)}
-            <MovieCard {movie} ondelete={handleDelete} onedit={handleEdit} />
+            <MovieCard {movie} ondelete={handleDelete} onedit={handleEdit} onRate={handleRate}/>
           {/each}
         </div>
       {/if}
