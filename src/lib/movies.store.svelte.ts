@@ -95,7 +95,9 @@ export const moviesStore = {
     try {
       await api.rateMovie(id, rating);
       // Actualizar la película con el nuevo rating
-      movies = movies.map(m => m.id === id ? { ...m, rating: (m.rating || 0) + 1 } : m);
+      movies = movies.map(m => 
+        m.id === id ? { ...m, rating: rating} : m
+      );
       return true;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Error al valorar película';
