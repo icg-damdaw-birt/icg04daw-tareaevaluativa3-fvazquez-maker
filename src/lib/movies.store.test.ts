@@ -17,6 +17,7 @@ vi.mock('./api.service', () => ({
     createMovie: vi.fn(),
     updateMovie: vi.fn(),
     deleteMovie: vi.fn(),
+    rateMovie: vi.fn(),
   }
 }));
 
@@ -218,6 +219,107 @@ describe('Movies Store (Svelte 5 Runes)', () => {
 
       expect(ok).toBe(false);
       expect(moviesStore.error).toBe('Forbidden');
+      expect(moviesStore.mutating).toBe(false);
+    });
+  });
+
+  // ─── rateMovie ────────────────────────────────────────────────
+  describe('rateMovie()', () => {
+    it('debería valorar una película existente correctamente', async () => {
+      // ARRANGE - Cargar película sin rating
+      const movieWithoutRating = { id: '1', title: 'Inception', director: 'Christopher Nolan', year: 2010 };
+      vi.mocked(api.getMovies).mockResolvedValue([movieWithoutRating]);
+      await moviesStore.loadMovies();
+
+      vi.mocked(api.rateMovie).mockResolvedValue(undefined);
+
+      // ACT - Llamar a rateMovie con rating 4
+      const ok = await moviesStore.rateMovie('1', 4);
+
+      // ASSERT
+      expect(api.rateMovie).toHaveBeenCalledWith('1', 4);
+      expect(api.rateMovie).toHaveBeenCalledOnce();
+      expect(ok).toBe(true);
+
+      // Verificar que el rating de la película se actualizó correctamente
+      const ratedMovie = moviesStore.movies.find(m => m.id === '1');
+      expect(ratedMovie?.rating).toBe(4); // Rating se asigna directamente
+    });
+
+    it('debería actualizar el rating de una película que ya tiene valores', async () => {
+      // ARRANGE - Película con rating = 3
+      const movieWithRating = { id: '2', title: 'The Matrix', director: 'Wachowski Sisters', year: 1999, rating: 3 };
+      vi.mocked(api.getMovies).mockResolvedValue([movieWithRating]);
+      await moviesStore.loadMovies();
+
+      vi.mocked(api.rateMovie).mockResolvedValue(undefined);
+
+      // ACT - Valorar con 5 estrellas
+      const ok = await moviesStore.rateMovie('2', 5);
+
+      // ASSERT
+      expect(ok).toBe(true);
+      expect(api.rateMovie).toHaveBeenCalledWith('2', 5);
+
+      const ratedMovie = moviesStore.movies.find(m => m.id === '2');
+      expect(ratedMovie?.rating).toBe(5); // Rating se reemplaza por el nuevo valor
+    });
+
+    it('debería rechazar rating < 1', async () => {
+      // ARRANGE
+      vi.mocked(api.getMovies).mockResolvedValue([...mockMovies]);
+      await moviesStore.loadMovies();
+
+      // ACT - Intentar rating inválido (0)
+      const ok = await moviesStore.rateMovie('1', 0);
+
+      // ASSERT
+      expect(ok).toBe(false);
+      expect(moviesStore.error).toBe('La valoración debe estar entre 1 y 5');
+      expect(api.rateMovie).not.toHaveBeenCalled();
+    });
+
+    it('debería rechazar rating > 5', async () => {
+      // ARRANGE
+      vi.mocked(api.getMovies).mockResolvedValue([...mockMovies]);
+      await moviesStore.loadMovies();
+
+      // ACT - Intentar rating inválido (6)
+      const ok = await moviesStore.rateMovie('1', 6);
+
+      // ASSERT
+      expect(ok).toBe(false);
+      expect(moviesStore.error).toBe('La valoración debe estar entre 1 y 5');
+      expect(api.rateMovie).not.toHaveBeenCalled();
+    });
+
+    it('debería manejar error al valorar una película desde la API', async () => {
+      // ARRANGE
+      vi.mocked(api.getMovies).mockResolvedValue([...mockMovies]);
+      await moviesStore.loadMovies();
+
+      vi.mocked(api.rateMovie).mockRejectedValue(new Error('Server error'));
+
+      // ACT
+      const ok = await moviesStore.rateMovie('1', 4);
+
+      // ASSERT
+      expect(ok).toBe(false);
+      expect(moviesStore.error).toBe('Server error');
+      expect(moviesStore.mutating).toBe(false);
+    });
+
+    it('debería establecer mutating=false después de completar la operación', async () => {
+      // ARRANGE
+      vi.mocked(api.getMovies).mockResolvedValue([...mockMovies]);
+      await moviesStore.loadMovies();
+
+      vi.mocked(api.rateMovie).mockResolvedValue(undefined);
+
+      // ACT
+      await moviesStore.rateMovie('1', 3);
+
+      // ASSERT - Verificar que mutating es false después de la operación
       expect(moviesStore.mutating).toBe(false);
     });
   });
