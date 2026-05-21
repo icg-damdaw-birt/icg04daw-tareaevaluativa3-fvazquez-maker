@@ -1,4 +1,5 @@
-﻿import { authToken } from './auth.store.svelte';
+﻿import { PUBLIC_API_URL } from '$env/static/public';
+import { authToken } from './auth.store.svelte';
 import type {
   ApiErrorPayload,
   Credentials,
@@ -9,7 +10,7 @@ import type {
 } from './types';
 
 // Configuración base del servicio API
-const FALLBACK_API_URL = 'http://localhost:3000';
+const FALLBACK_API_URL = 'https://mivideotecabackend-fvazquez.onrender.com/';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
